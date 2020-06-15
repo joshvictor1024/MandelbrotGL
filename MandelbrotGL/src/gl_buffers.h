@@ -10,121 +10,129 @@ namespace gl
 {
 	class VertexBuffer
 	{
-		GLuint mId = 0;
-		GLenum mPurpose;
-
 	public:
 		VertexBuffer(GLenum purpose = GL_STATIC_DRAW):
-			mPurpose(purpose)
+			purpose(purpose)
 		{
-			glGenBuffers(1, &mId);
+			glGenBuffers(1, &id);
 		}
+
 		~VertexBuffer()
 		{
-			glDeleteBuffers(1, &mId);
+			glDeleteBuffers(1, &id);
 		}
 
 		void bind() const
 		{
-			glBindBuffer(GL_ARRAY_BUFFER, mId);
+			glBindBuffer(GL_ARRAY_BUFFER, id);
 		}
+
 		void unbind() const
 		{
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
-		void update(unsigned int size, const void* data)
-		{
-			glBufferData(GL_ARRAY_BUFFER, size, data, mPurpose);
-		}
-	};
 
+		void update(unsigned int size, const void* data) const
+		{
+			glBufferData(GL_ARRAY_BUFFER, size, data, purpose);
+		}
+
+    private:
+        GLuint id = 0;
+        GLenum purpose;
+	};
 
 	class IndexBuffer
 	{
-		GLuint mId = 0;
-		GLenum mPurpose;
-
 	public:
 		IndexBuffer(GLenum purpose = GL_STATIC_DRAW):
-			mPurpose(purpose)
+			purpose(purpose)
 		{
-			glGenBuffers(1, &mId);
+			glGenBuffers(1, &id);
 		}
+
 		~IndexBuffer()
 		{
-			glDeleteBuffers(1, &mId);
+			glDeleteBuffers(1, &id);
 		}
 
 		void bind() const
 		{
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mId);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 		}
+
 		void unbind() const
 		{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
-		void update(unsigned int size, const void* data)
-		{
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, mPurpose);
-		}
-	};
 
+		void update(unsigned int size, const void* data) const
+		{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, purpose);
+		}
+
+    private:
+        GLuint id = 0;
+        GLenum purpose;
+	};
 
 	struct VertexBufferElement
 	{
+        static constexpr unsigned int sizeofGL(GLenum type)
+        {
+            switch (type)
+            {
+            case GL_FLOAT:          return sizeof(GLfloat);
+            case GL_UNSIGNED_INT:   return sizeof(GLuint);
+            case GL_UNSIGNED_BYTE:  return sizeof(GLubyte);
+            }
+
+            // Maybe assert that unimplemented type isn't used
+            printf("Unimplemented type is used for a vertex buffer element!\n");
+
+            return 0;
+        }
+
 		GLenum type;
 		unsigned int count;
 		bool normalized;
-
-		static unsigned int sizeofGL(GLenum type)
-		{
-			switch (type)
-			{
-			case GL_FLOAT:			return sizeof(GLfloat);
-			case GL_UNSIGNED_INT:	return sizeof(GLuint);
-			case GL_UNSIGNED_BYTE:	return sizeof(GLubyte);
-			}
-			//assert
-			return 0;
-		}
 	};
+
 	class VertexBufferLayout
 	{
-	private:
-		std::vector<VertexBufferElement> mElements;
-		unsigned int mStride = 0;
-
 	public:
 		void push(GLenum type, unsigned int count)
 		{
-			mElements.push_back({ type, count, GL_FALSE});
-			mStride += count * VertexBufferElement::sizeofGL(type);
+			elements.push_back({ type, count, GL_FALSE});
+			stride += count * VertexBufferElement::sizeofGL(type);
 		}
 
-		inline const std::vector<VertexBufferElement>& getElements() const { return mElements; }
-		inline unsigned int getStride() const { return mStride; }
-	};
+		inline const std::vector<VertexBufferElement>& getElements() const { return elements; }
+		inline unsigned int getStride() const { return stride; }
 
+    private:
+        std::vector<VertexBufferElement> elements;
+        unsigned int stride = 0;
+	};
 
 	class VertexArray
 	{
-	private:
-		GLuint mId;
-
 	public:
 		VertexArray()
 		{
-			glGenVertexArrays(1, &mId);
+			glGenVertexArrays(1, &id);
 		}
+
 		~VertexArray()
 		{
-			glDeleteVertexArrays(1, &mId);
+			glDeleteVertexArrays(1, &id);
 		}
 
 		void bind() const
 		{
-			glBindVertexArray(mId);
+			glBindVertexArray(id);
 		}
+
 		void unbind() const
 		{
 			glBindVertexArray(0);
@@ -147,6 +155,9 @@ namespace gl
 				offset += element.count * VertexBufferElement::sizeofGL(element.type);
 			}
 		}
+
+    private:
+        GLuint id;
 	};
 };
 

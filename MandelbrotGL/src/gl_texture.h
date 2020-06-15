@@ -5,14 +5,18 @@
 
 namespace gl
 {
+    // Parameter enums
+
 	enum class TextureTarget
 	{
 		TEX1D, TEX2D
 	};
+
 	enum class PixelFormat
 	{
 		RGB8, RGBA8, RGBA32F, R8, R32F, R8UI
 	};
+
 	enum class TextureWrap
 	{        
 		CHOP,   // Stops beyond 0 to 1        
@@ -20,21 +24,15 @@ namespace gl
         WRAP    // Repeat the texture
 	};
 
+    // Class def
+
 	class Texture
 	{
-		unsigned int mId = 0;
-
-		GLenum mTargetParam;
-		GLenum mPixelFormatParam;
-		GLenum mInternalPixelFormatParam;
-		GLenum mPixelTypeParam;
-		GLenum mWrapParam;
-
 	public:
-		Texture(TextureTarget textureTarget, PixelFormat pixelFormat, TextureWrap textureWrap = TextureWrap::CHOP);
+		Texture(TextureTarget textureTarget, PixelFormat pixelFormat, TextureWrap textureWrap);
 		~Texture();
 
-		void bind(unsigned int _slot = 0);
+		void bind(unsigned int slot = 0);
 		void unbind();
 
 		void updatePixelData(glm::ivec2 dataDimension, const void* pixelData);  // 2D overload
@@ -42,12 +40,23 @@ namespace gl
 		void bindToImageUnit(unsigned int slot = 0);
 
 		//constexpr int getPixelDataStride();
+
+    private:
+        unsigned int id = 0;
+        GLenum target;
+        GLenum pixelFormat;
+        GLenum internalPixelFormat;
+        GLenum pixelType;
+        GLenum wrap;
 	};
 
+    // Method def
 
-	Texture::Texture(TextureTarget textureTarget, PixelFormat pixelFormat, TextureWrap textureWrap)
+	Texture::Texture(TextureTarget textureTarget, PixelFormat pixelFormat, TextureWrap textureWrap = TextureWrap::CHOP)
 	{	
-		mTargetParam = [textureTarget]()
+        // Parameter setting
+
+		this->target = [textureTarget]()
 		{
 			switch (textureTarget)
 			{
@@ -55,7 +64,8 @@ namespace gl
 			case TextureTarget::TEX2D: return GL_TEXTURE_2D;
 			}
 		}();
-		mPixelFormatParam = [pixelFormat]()
+
+		this->pixelFormat = [pixelFormat]()
 		{
 			switch (pixelFormat)
 			{
@@ -67,7 +77,8 @@ namespace gl
 			case PixelFormat::RGBA32F: return GL_RGBA;
 			}
 		}();
-		mInternalPixelFormatParam = [pixelFormat]()
+
+		this->internalPixelFormat = [pixelFormat]()
 		{
 			switch (pixelFormat)
 			{
@@ -79,7 +90,8 @@ namespace gl
 			case PixelFormat::RGBA32F: return GL_RGBA32F;
 			}
 		}();
-		mPixelTypeParam = [pixelFormat]()
+
+		this->pixelType = [pixelFormat]()
 		{
 			switch (pixelFormat)
 			{
@@ -91,7 +103,8 @@ namespace gl
 			case PixelFormat::RGBA32F: return GL_FLOAT;
 			}
 		}();
-		mWrapParam = [textureWrap]()
+
+		wrap = [textureWrap]()
 		{
 			switch (textureWrap)
 			{
@@ -101,60 +114,60 @@ namespace gl
 			}
 		}();
 
+        // GL code
 
-		glGenTextures(1, &mId);
-		glBindTexture(mTargetParam, mId);
+		glGenTextures(1, &id);
+		glBindTexture(target, id);
 
-		glTexParameteri(mTargetParam, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(mTargetParam, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		//s->x t->y
-		glTexParameteri(mTargetParam, GL_TEXTURE_WRAP_S, mWrapParam);
+		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap);   // (s, t) means (x, y)
 		switch (textureTarget)
 		{
-		case TextureTarget::TEX1D: break;
-		case TextureTarget::TEX2D: glTexParameteri(mTargetParam, GL_TEXTURE_WRAP_T, mWrapParam); break;		
+		case TextureTarget::TEX1D: break;                   // no t if 1D
+		case TextureTarget::TEX2D: glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap); break;		
 		}
 
-		glBindTexture(mTargetParam, 0);
+		glBindTexture(target, 0);
 	}
+
 	Texture::~Texture()
 	{
-		glDeleteTextures(1, &mId);
+		glDeleteTextures(1, &id);
 	}
 
-
-	void Texture::bind(unsigned int _slot)
+	void Texture::bind(unsigned int slot)
 	{
-		glActiveTexture(GL_TEXTURE0 + _slot);   // Slot is used as a uniform
-		glBindTexture(mTargetParam, mId);
+		glActiveTexture(GL_TEXTURE0 + slot);   // Slot is used as a uniform
+		glBindTexture(target, id);
 	}
 	void Texture::unbind()
 	{
-		glBindTexture(mTargetParam, 0);
+		glBindTexture(target, 0);
 	}
 
 	void Texture::updatePixelData(glm::ivec2 dataDimension, const void* pixelData)
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, mInternalPixelFormatParam, dataDimension.x, dataDimension.y, 0, mPixelFormatParam, mPixelTypeParam, pixelData);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalPixelFormat, dataDimension.x, dataDimension.y, 0, pixelFormat, pixelType, pixelData);
 	}
+
 	void Texture::updatePixelData(int dataWidth, const void* pixelData)
 	{
-		glTexImage1D(GL_TEXTURE_1D, 0, mInternalPixelFormatParam, dataWidth, 0, mPixelFormatParam, mPixelTypeParam, pixelData);
+		glTexImage1D(GL_TEXTURE_1D, 0, internalPixelFormat, dataWidth, 0, pixelFormat, pixelType, pixelData);
 	}
 
 	void Texture::bindToImageUnit(unsigned int slot)
 	{
-		switch (mInternalPixelFormatParam)
+		switch (internalPixelFormat)
 		{
 		case GL_RGB8:
 		case GL_RGBA8:
 			printf("Current pixel format not supported by image unit!\n");
 			break;
 		
-		//might be dangerous
+		// might be dangerous
 		default:
-			glBindImageTexture(slot, mId, 0, GL_FALSE, 0, GL_WRITE_ONLY, mInternalPixelFormatParam);
+			glBindImageTexture(slot, id, 0, GL_FALSE, 0, GL_WRITE_ONLY, internalPixelFormat);
 			break;
 		}
 	}

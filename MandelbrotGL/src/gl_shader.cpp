@@ -8,45 +8,47 @@ namespace gl
 {
 	GraphicShader::GraphicShader(const char* vertexShaderpath, const char* fragmentShaderPath)
 	{
-		mId = glCreateProgram();
+		id = glCreateProgram();
 		GLuint vertexShaderId = compile(GL_VERTEX_SHADER, vertexShaderpath);
 		GLuint fragmentShaderId = compile(GL_FRAGMENT_SHADER, fragmentShaderPath);
 
-		glAttachShader(mId, vertexShaderId);
-		glAttachShader(mId, fragmentShaderId);
+		glAttachShader(id, vertexShaderId);
+		glAttachShader(id, fragmentShaderId);
 		link();
 
-		glDeleteShader(vertexShaderId);//glDetachShader()?
+		glDeleteShader(vertexShaderId); // glDetachShader()?
 		glDeleteShader(fragmentShaderId);
 
-		GLenum err = glGetError();
-		if (err)
+		GLenum error = glGetError();
+		if (error != 0)
 		{
-			printf("error %d\n", err);
+			printf("error %d\n", error);
 		}
 	}
+
 	ComputeShader::ComputeShader(const char* computeShaderpath)
 	{
-		mId = glCreateProgram();
+		id = glCreateProgram();
 		GLuint computeShaderId = compile(GL_COMPUTE_SHADER, computeShaderpath);
 
-		glAttachShader(mId, computeShaderId);
+		glAttachShader(id, computeShaderId);
 		link();
 
-		glDeleteShader(computeShaderId);//glDetachShader()?
+		glDeleteShader(computeShaderId); // glDetachShader()?
 
-		GLenum err = glGetError();
-		if (err)
-		{
-			printf("error %d\n", err);
-		}
+        GLenum error = glGetError();
+        if (error != 0)
+        {
+            printf("error %d\n", error);
+        }
 	}
+
 	Shader::~Shader()
 	{
-		glDeleteProgram(mId);
+		glDeleteProgram(id);
 	}
 
-	GLuint Shader::compile(GLenum shaderType, const char* path)
+	GLuint Shader::compile(GLenum shaderType, const char* path) const
 	{
 		GLuint shaderId = glCreateShader(shaderType);
 
@@ -54,6 +56,7 @@ namespace gl
 		{
 			{
 				std::fstream source(path, std::ios::in);
+
 				if (source)
 				{
 					source.seekg(0, std::ios::end);
@@ -62,17 +65,20 @@ namespace gl
 					source.seekg(0, std::ios::beg);
 					source.read(&bufferString[0], bufferString.size());
 				}
-				else
-					printf("not opened\n");
+                else
+                {
+                    printf("not opened\n");
+                }
 			}
 			const char* src = bufferString.c_str();
-			//printf("char count %d\n%s", bufferString.size(), src);//FIX: read file wrong behavior
+			//printf("char count %d\n%s", bufferString.size(), src);    //FIX: read file wrong behavior
 			glShaderSource(shaderId, 1, &src, nullptr);
 			glCompileShader(shaderId);
 
 			int compileResult;
 			glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileResult);
-			if (!compileResult)
+
+			if (compileResult == 0)
 			{
 				char message[256] = {};
 				GLint length;
@@ -88,34 +94,36 @@ namespace gl
 	}
 	void Shader::link()
 	{
-		glLinkProgram(mId);
+		glLinkProgram(id);
 		{
 			GLint linkResult;
-			glGetProgramiv(mId,  GL_LINK_STATUS, &linkResult);
+			glGetProgramiv(id,  GL_LINK_STATUS, &linkResult);
+
 			if (linkResult == GL_FALSE)
 			{
 				GLint length;
 				char message[256] = {};
 
-				glGetProgramiv(mId, GL_INFO_LOG_LENGTH, &length);
-				glGetProgramInfoLog(mId, length, &length, message);
+				glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
+				glGetProgramInfoLog(id, length, &length, message);
 				printf("%s", message);
 			}
 		}
 	}
 	void Shader::validate()
 	{
-		glValidateProgram(mId);
+		glValidateProgram(id);
 		{
 			GLint validateResult;
-			glGetProgramiv(mId,  GL_VALIDATE_STATUS, &validateResult);
+			glGetProgramiv(id,  GL_VALIDATE_STATUS, &validateResult);
+
 			if (!validateResult)
 			{
 				GLint length;
 				char message[256] = {};
 
-				glGetProgramiv(mId, GL_INFO_LOG_LENGTH, &length);
-				glGetProgramInfoLog(mId, length, &length, message);
+				glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
+				glGetProgramInfoLog(id, length, &length, message);
 				printf("%s", message);
 			}
 		}
@@ -126,15 +134,17 @@ namespace gl
 		if (mUniformLocations.find(name) != mUniformLocations.end())
 			return mUniformLocations[name];
 
-		GLint location = glGetUniformLocation(mId, name);
-		if (location == -1)
-			printf("Warning: uniform '%s' doesn't exist\n", name);
+		GLint location = glGetUniformLocation(id, name);
+        if (location == -1)
+        {
+            printf("Warning: uniform '%s' doesn't exist\n", name);
+        }
 
 		mUniformLocations[name] = location;
 		return location;
 	}
 
-	void ComputeShader::compute(glm::ivec3 workgroupCount)
+	void ComputeShader::compute(glm::ivec3 workgroupCount) const
 	{
 		glDispatchCompute(workgroupCount.x, workgroupCount.y, workgroupCount.z);
 	}

@@ -22,7 +22,7 @@ namespace gl
 	public:
 		Context();
 		~Context();
-		bool initSuccess() noexcept { return success; }
+		bool initSuccess() const noexcept { return success; }
 
 	private:
 		bool success = false;
@@ -33,7 +33,7 @@ namespace gl
 	public:
 		ImguiContext(const char* glslVersionMacro);
 		~ImguiContext();
-		bool initSuccess() noexcept { return success; }
+		bool initSuccess() const noexcept { return success; }
 
 	private:
 		bool success = false;

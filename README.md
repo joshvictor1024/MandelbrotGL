@@ -16,6 +16,10 @@ A minimal mandelbrot set fractal explorer powered by GPU computation using OpenG
 
 ## DevLog
 
+### 2020-06-15
+
+- Branch to experiment with integer type texture
+
 ### 2020-06-12
 
 - First publish

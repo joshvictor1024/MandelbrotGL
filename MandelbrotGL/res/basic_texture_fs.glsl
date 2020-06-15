@@ -9,8 +9,7 @@ uniform sampler1D uColorTexture;
 void main()
 {
 	color = vec4(
-		vec3(
-			texture(uColorTexture, texture(uPositionTexture, vTexCoord).x)
-		), 0.0
+		vec3(texture(uColorTexture, texture(uPositionTexture, vTexCoord).x)),
+        1.0
 	);
 }

@@ -11,7 +11,7 @@ namespace gl
 	};
 	enum class PixelFormat
 	{
-		RGB8, RGBA8, RGBA32F, R8, R32F
+		RGB8, RGBA8, RGBA32F, R8, R32F, R8UI
 	};
 	enum class TextureWrap
 	{        
@@ -61,6 +61,7 @@ namespace gl
 			{
 			case PixelFormat::R8:
 			case PixelFormat::R32F: return GL_RED;
+            case PixelFormat::R8UI: return GL_RED_INTEGER;
 			case PixelFormat::RGB8: return GL_RGB;
 			case PixelFormat::RGBA8:
 			case PixelFormat::RGBA32F: return GL_RGBA;
@@ -72,6 +73,7 @@ namespace gl
 			{
 			case PixelFormat::R8: return GL_R8;
 			case PixelFormat::R32F: return GL_R32F;
+            case PixelFormat::R8UI: return GL_R8UI;
 			case PixelFormat::RGB8: return GL_RGB8;
 			case PixelFormat::RGBA8: return GL_RGBA8;
 			case PixelFormat::RGBA32F: return GL_RGBA32F;
@@ -82,6 +84,7 @@ namespace gl
 			switch (pixelFormat)
 			{
 			case PixelFormat::R8:
+            case PixelFormat::R8UI:
 			case PixelFormat::RGB8:
 			case PixelFormat::RGBA8: return GL_UNSIGNED_BYTE;
 			case PixelFormat::R32F:
@@ -123,7 +126,7 @@ namespace gl
 
 	void Texture::bind(unsigned int _slot)
 	{
-		glActiveTexture(GL_TEXTURE0 + _slot);//slot is used as a uniform
+		glActiveTexture(GL_TEXTURE0 + _slot);   // Slot is used as a uniform
 		glBindTexture(mTargetParam, mId);
 	}
 	void Texture::unbind()

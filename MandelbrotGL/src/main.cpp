@@ -90,13 +90,17 @@ int main()
 
 		// Texture
 
+        const unsigned int txSlot = 0;
+        const unsigned int txColorSlot = 1;
+        const unsigned int imageSlot = 2;
+
 		gl::Texture tx(gl::TextureTarget::TEX2D, gl::PixelFormat::R8, gl::TextureWrap::WRAP);
-		tx.bind(0);
+		tx.bind(txSlot);
 		tx.updatePixelData(TEXTURE_DIM, nullptr);
-		tx.bindToImageUnit(0);
+		tx.bindToImageUnit(imageSlot);
 
 		gl::Texture txDrawColor(gl::TextureTarget::TEX1D, gl::PixelFormat::RGB8, gl::TextureWrap::CHOP);
-		txDrawColor.bind(1);
+		txDrawColor.bind(txColorSlot);
 		const uint8_t colorData[] = {
 			  0,   0,   0,
 			120,   0,   0,
@@ -111,15 +115,15 @@ int main()
 
 		gl::GraphicShader graphicShader("res\\basic_texture_vs.glsl", "res\\basic_texture_fs.glsl");
 		graphicShader.bind();
-		graphicShader.setUniform1i("uPositionTexture", 0);
-		graphicShader.setUniform1i("uColorTexture", 1);
+		graphicShader.setUniform1i("uPositionTexture", txSlot);
+		graphicShader.setUniform1i("uColorTexture", txColorSlot);
 		graphicShader.setUniformMat4f( "uMVP",
 			glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT, -1.0f, 1.0f)
 		);
 
 		gl::ComputeShader computeShader("res\\mandelbrot_cs.glsl");
 		computeShader.bind();
-		computeShader.setUniform1i("uImage", 0);
+		computeShader.setUniform1i("uImage", imageSlot);
 		computeShader.setUniform2f("uImageDim", TEXTURE_DIM.x, TEXTURE_DIM.y );
 
 		// Imgui
@@ -151,7 +155,7 @@ int main()
 				computeShader.compute({TEXTURE_DIM.x / LOCAL_WORKGROUP_SIZE, TEXTURE_DIM.y / LOCAL_WORKGROUP_SIZE, 1});
 
 				needDraw = false;
-				glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 			}
 
 			// Draw

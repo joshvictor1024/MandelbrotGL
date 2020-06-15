@@ -94,9 +94,15 @@ int main()
         const unsigned int txColorSlot = 1;
         const unsigned int imageSlot = 2;
 
-		gl::Texture tx(gl::TextureTarget::TEX2D, gl::PixelFormat::R8, gl::TextureWrap::WRAP);
+        float* textureData = new float[int(TEXTURE_DIM.x) * int(TEXTURE_DIM.y)];
+        for (int i = 0; i < int(TEXTURE_DIM.x) * int(TEXTURE_DIM.y); ++i)
+        {
+            textureData[i] = 1.0f;
+        }
+
+		gl::Texture tx(gl::TextureTarget::TEX2D, gl::PixelFormat::R32F, gl::TextureWrap::WRAP);
 		tx.bind(txSlot);
-		tx.updatePixelData(TEXTURE_DIM, nullptr);
+		tx.updatePixelData(TEXTURE_DIM, textureData);
 		tx.bindToImageUnit(imageSlot);
 
 		gl::Texture txDrawColor(gl::TextureTarget::TEX1D, gl::PixelFormat::RGB8, gl::TextureWrap::CHOP);
@@ -147,16 +153,18 @@ int main()
 		{
 			// Compute
 
-			if (needDraw || !lazyDraw)
+			/*if (needDraw || !lazyDraw)
 			{
 				computeShader.bind();
 				computeShader.setUniform4f("uRangeRect", numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / ASPECT_RATIO) / 2, rangeX, (rangeX / ASPECT_RATIO) );
 				computeShader.setUniform1i("uIteration", iteration);
 				computeShader.compute({TEXTURE_DIM.x / LOCAL_WORKGROUP_SIZE, TEXTURE_DIM.y / LOCAL_WORKGROUP_SIZE, 1});
 
+                printf("%d\n", glGetError());
+
 				needDraw = false;
 				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
-			}
+			}*/
 
 			// Draw
 

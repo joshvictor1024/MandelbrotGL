@@ -2,7 +2,7 @@
 
 layout(local_size_x = 32, local_size_y = 32) in;
 
-layout(r8) uniform image2D uImage;
+layout(r32f) uniform image2D uImage;
 uniform vec4 uRangeRect;
 uniform vec2 uImageDim;
 uniform int uIteration;

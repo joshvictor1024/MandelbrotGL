@@ -1,8 +1,10 @@
-#include "gl_engine.h"
+#include "gl_manager.h"
 
 #include "gl_buffers.h"
 #include "gl_shader.h"
 #include "gl_texture.h"
+
+#include "gl_constants.h"
 
 #include "glm.hpp"
 #include "gtc/matrix_transform.hpp"
@@ -13,7 +15,7 @@
 
 template<typename T>
 struct Rect {
-	T x; T y; T w; T h;
+    T x, y, w, h;
 };
 typedef Rect<int> Recti;
 typedef Rect<float> Rectf;
@@ -27,6 +29,7 @@ void verteciesSrcRect(float vertecies[16], glm::ivec2 textureDim, Rectf srcRect)
 	vertecies[3] = vertecies[7] = srcRect.y / textureDim.y;
 	vertecies[11] = vertecies[15] = (srcRect.y + srcRect.h) / textureDim.y;
 }
+
 void verteciesDstRect(float vertecies[16], Rectf dstRect)
 {
 	vertecies[0] = vertecies[12] = dstRect.x;
@@ -35,26 +38,18 @@ void verteciesDstRect(float vertecies[16], Rectf dstRect)
 	vertecies[9] = vertecies[13] = dstRect.y + dstRect.h;
 }
 
-// Constants ///////////////////////////////////////////////////////
-
-constexpr float ASPECT_RATIO = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
-constexpr glm::vec2 TEXTURE_DIM = { 2048.0f, 2048.0f / ASPECT_RATIO };
-
-constexpr int LOCAL_WORKGROUP_SIZE = 32;
-
 // Program ///////////////////////////////////////////////////////
 
 int main()
 {
 	// Set up OpenGL
 
-	gl::Context context;
-	if (context.initSuccess() == false)
+	if (gl::Manager::InitSuccess() == false)
 	{
 		return -1;
 	}
+
 	glfwSwapInterval(1);
-	glfwSetKeyCallback(gl::window, &gl::keyCallback);
 
 	// Graphics
 
@@ -68,8 +63,8 @@ int main()
 			0, 0, 1.0, 1.0,
 			0, 0, 0.0, 1.0
 		};
-		verteciesSrcRect(vertecies, TEXTURE_DIM, {0, 0, TEXTURE_DIM.x, TEXTURE_DIM.y});
-		verteciesDstRect(vertecies, {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT});
+		verteciesSrcRect(vertecies, gl::TEXTURE_DIM, { 0, 0, gl::TEXTURE_DIM.x, gl::TEXTURE_DIM.y });
+		verteciesDstRect(vertecies, { 0, 0, gl::WINDOW_WIDTH, gl::WINDOW_HEIGHT });
 		vb.bind();
 		vb.update(16 * sizeof(float), vertecies);
 
@@ -96,7 +91,7 @@ int main()
 
 		gl::Texture tx(gl::TextureTarget::TEX2D, gl::PixelFormat::R8, gl::TextureWrap::WRAP);
 		tx.bind(txSlot);
-		tx.updatePixelData(TEXTURE_DIM, nullptr);
+		tx.updatePixelData(gl::TEXTURE_DIM, nullptr);
 		tx.bindToImageUnit(imageSlot);
 
 		gl::Texture txDrawColor(gl::TextureTarget::TEX1D, gl::PixelFormat::RGB8, gl::TextureWrap::CHOP);
@@ -118,22 +113,26 @@ int main()
 		graphicShader.setUniform1i("uPositionTexture", txSlot);
 		graphicShader.setUniform1i("uColorTexture", txColorSlot);
 		graphicShader.setUniformMat4f( "uMVP",
-			glm::ortho(0.0f, (float)WINDOW_WIDTH, 0.0f, (float)WINDOW_HEIGHT, -1.0f, 1.0f)
+			glm::ortho(0.0f, (float)gl::WINDOW_WIDTH, 0.0f, (float)gl::WINDOW_HEIGHT, -1.0f, 1.0f)
 		);
 
 		gl::ComputeShader computeShader("res\\mandelbrot_cs.glsl");
 		computeShader.bind();
 		computeShader.setUniform1i("uImage", imageSlot);
-		computeShader.setUniform2f("uImageDim", TEXTURE_DIM.x, TEXTURE_DIM.y );
+        computeShader.setUniform2f("uImageDim", gl::TEXTURE_DIM.x, gl::TEXTURE_DIM.y);
 
-		// Imgui
-
-		gl::ImguiContext imguiContext("#version 430 core");
+		// Variables controlled by Imgui
 
 		glm::vec2 numberCenter = { -0.25f, 0.0f };
 		glm::vec2 c = { 0.0f, 0.0f };
 		float rangeX = 4.0f;
 		int iteration = 256;
+
+        constexpr float rangeAddZoomPerSec = 1.0f;  // relative to rangeX
+        constexpr float rangeMovePerSec = 0.25f;    // relative to rangeX
+
+        bool shiftLeftPressed = false;
+        bool shiftRightPressed = false;
 		
 		// Run
 
@@ -143,16 +142,16 @@ int main()
 		computeShader.validate();
 		graphicShader.validate();
 		
-		while (!gl::windowShouldClose())
+		while (gl::Manager::WindowShouldClose() == false)
 		{
 			// Compute
 
-			if (needDraw || !lazyDraw)
+			if (needDraw || lazyDraw == false)
 			{
 				computeShader.bind();
-				computeShader.setUniform4f("uRangeRect", numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / ASPECT_RATIO) / 2, rangeX, (rangeX / ASPECT_RATIO) );
+				computeShader.setUniform4f("uRangeRect",numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / gl::ASPECT_RATIO) / 2, rangeX, (rangeX / gl::ASPECT_RATIO) );
 				computeShader.setUniform1i("uIteration", iteration);
-				computeShader.compute({TEXTURE_DIM.x / LOCAL_WORKGROUP_SIZE, TEXTURE_DIM.y / LOCAL_WORKGROUP_SIZE, 1});
+				computeShader.compute({ gl::TEXTURE_DIM.x / gl::LOCAL_WORKGROUP_SIZE, gl::TEXTURE_DIM.y / gl::LOCAL_WORKGROUP_SIZE, 1});
 
 				needDraw = false;
 				glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
@@ -165,6 +164,8 @@ int main()
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 			// Imgui window
+
+            float deltaTime = ImGui::GetIO().DeltaTime; // Cached, in seconds
 
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
@@ -184,7 +185,7 @@ int main()
 
 				ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
 				ImGui::SameLine();
-				ImGui::Text("(Delta Time %3.2f ms)", ImGui::GetIO().DeltaTime * 1000.0f);
+				ImGui::Text("(Delta Time %3.2f ms)", deltaTime * 1000.0f);
 
 				ImGui::End();
 			}
@@ -193,64 +194,73 @@ int main()
 
 			// Finish draw
 
-			gl::windowSwapBuffer();
+            gl::Manager::WindowSwapBuffer();
 
 			// Poll key events
 
-			gl::pollEvent();
+            gl::Manager::PollEvent();
 
-			if (gl::keyDown())
+			if (gl::Manager::KeyDown())
 			{
-				if (gl::keyDown(gl::KEY_ESCAPE))
+                using GL = gl::Manager;
+
+				if (GL::KeyDown(GL::KEY_ESCAPE))
 				{
-					glfwSetWindowShouldClose(gl::window, 1);
+                    GL::SetWindowShouldClose(true);
 				}
 
-				if (gl::keyDown(gl::KEY_SHIFT))
+				if (GL::KeyDown(GL::KEY_SHIFT))
 				{
-					if (gl::keyDown(gl::KEY_UP))
+					if (GL::KeyDown(GL::KEY_UP))
 					{
-						rangeX *= (1.0f / 0.9f);
-						if (rangeX > 4.0f)
-							rangeX = 4.0f;
-					}
-					if (gl::keyDown(gl::KEY_DOWN))
-					{
-						rangeX *= 0.9f;
-					}
-					if (gl::keyDown(gl::KEY_LEFT))
-					{
-						if (iteration > 128)
-							iteration -= 128;
-					}
-					if (gl::keyDown(gl::KEY_RIGHT))
-					{
-						iteration += 128;
+                        rangeX *= (1.0f + deltaTime * rangeAddZoomPerSec);
+                        if (rangeX > 4.0f)
+                            rangeX = 4.0f;
 					}
 
-					gl::setKeyState(gl::KEY_SHIFT);
+					if (GL::KeyDown(GL::KEY_DOWN))
+					{
+                        rangeX *= (1.0f - deltaTime * rangeAddZoomPerSec);
+                        if (rangeX < 0.00005f)
+                            rangeX = 0.00005f;
+					}
+
+					if (GL::KeyDown(GL::KEY_LEFT))
+					{
+                        if (shiftLeftPressed == false)
+                        {
+                            shiftLeftPressed = true;
+                            if (iteration > 128)
+                                iteration -= 128;
+                        }
+					}
+                    else
+                    {
+                        shiftLeftPressed = false;
+                    }
+
+					if (GL::KeyDown(GL::KEY_RIGHT))
+					{
+                        if (shiftRightPressed == false)
+                        {
+                            shiftRightPressed = true;
+                            iteration += 128;
+                        }
+					}
+                    else
+                    {
+                        shiftRightPressed = false;
+                    }
 				}
 				else
 				{
-					if (gl::keyDown(gl::KEY_UP))
-					{
-						numberCenter.y += rangeX / 64;
-					}
-					if (gl::keyDown(gl::KEY_DOWN))
-					{
-						numberCenter.y -= rangeX / 64;
-					}
-					if (gl::keyDown(gl::KEY_LEFT))
-					{
-						numberCenter.x -= rangeX / 64;
-					}
-					if (gl::keyDown(gl::KEY_RIGHT))
-					{
-						numberCenter.x += rangeX / 64;
-					}
-
-					gl::setKeyState(gl::KEY_NONE);
+                    float move = rangeX * deltaTime * rangeMovePerSec;
+					numberCenter.y += (float)(GL::KeyDown(GL::KEY_UP)) * move;
+                    numberCenter.y -= (float)(GL::KeyDown(GL::KEY_DOWN)) * move;
+                    numberCenter.x -= (float)(GL::KeyDown(GL::KEY_LEFT)) * move;
+                    numberCenter.x += (float)(GL::KeyDown(GL::KEY_RIGHT)) * move;
 				}
+
 				needDraw = true;
 			}
 		}

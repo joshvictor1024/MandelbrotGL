@@ -8,13 +8,16 @@ A minimal mandelbrot set fractal explorer powered by GPU computation using OpenG
 
 ### Request
 
-- Smooth movement (as opposed to raw key repeats)
-- Event based key input, rather than reading from a state buffer
 - Mouse control
 - Color range grows, so that image gains detail rather than change altogether when up-ing iteration count
 - Use integer type texture to store compute data
 
 ## DevLog
+
+### 2020-06-28
+
+- Smooth movement
+- Moved code into classes
 
 ### 2020-06-15
 

@@ -110,7 +110,7 @@ namespace gl
 			}
 		}
 	}
-	void Shader::validate()
+	void Shader::Validate()
 	{
 		glValidateProgram(id);
 		{

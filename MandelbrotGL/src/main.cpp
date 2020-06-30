@@ -65,7 +65,7 @@ int main()
 		};
 		verteciesSrcRect(vertecies, gl::TEXTURE_DIM, { 0, 0, gl::TEXTURE_DIM.x, gl::TEXTURE_DIM.y });
 		verteciesDstRect(vertecies, { 0, 0, gl::WINDOW_WIDTH, gl::WINDOW_HEIGHT });
-		vb.bind();
+		vb.Bind();
 		vb.update(16 * sizeof(float), vertecies);
 
 		gl::VertexBufferLayout ly;
@@ -73,14 +73,14 @@ int main()
 		ly.push(GL_FLOAT, 2);   // texture coord
 
 		gl::VertexArray va;
-		va.bind();
+		va.Bind();
 		va.addBuffer(vb, ly);
 
 		gl::IndexBuffer ib;
 		const GLuint indecies[6] = {
 			0, 1, 2, 2, 3, 0
 		};
-		ib.bind();
+		ib.Bind();
 		ib.update(6 * sizeof(GLuint), indecies);
 
 		// Texture
@@ -90,12 +90,12 @@ int main()
         const unsigned int imageSlot = 2;
 
 		gl::Texture tx(gl::TextureTarget::TEX2D, gl::PixelFormat::R8, gl::TextureWrap::WRAP);
-		tx.bind(txSlot);
-		tx.updatePixelData(gl::TEXTURE_DIM, nullptr);
-		tx.bindToImageUnit(imageSlot);
+		tx.Bind(txSlot);
+		tx.UpdatePixelData(gl::TEXTURE_DIM, nullptr);
+		tx.BindToImageUnit(imageSlot);
 
 		gl::Texture txDrawColor(gl::TextureTarget::TEX1D, gl::PixelFormat::RGB8, gl::TextureWrap::CHOP);
-		txDrawColor.bind(txColorSlot);
+		txDrawColor.Bind(txColorSlot);
         const uint8_t colorData[] = {
               0,   0,   0,
             230, 200,   0,
@@ -124,22 +124,22 @@ int main()
             255, 220,   0,
             255, 220,   0
         };
-		txDrawColor.updatePixelData((sizeof(colorData) / sizeof(uint8_t)) / 3, colorData);
+		txDrawColor.UpdatePixelData((sizeof(colorData) / sizeof(uint8_t)) / 3, colorData);
 
 		// Shaders
 
 		gl::GraphicShader graphicShader("res\\basic_texture_vs.glsl", "res\\basic_texture_fs.glsl");
-		graphicShader.bind();
-		graphicShader.setUniform1i("uPositionTexture", txSlot);
-		graphicShader.setUniform1i("uColorTexture", txColorSlot);
-		graphicShader.setUniformMat4f( "uMVP",
+		graphicShader.Bind();
+		graphicShader.SetUniform1i("uPositionTexture", txSlot);
+		graphicShader.SetUniform1i("uColorTexture", txColorSlot);
+		graphicShader.SetUniformMat4f( "uMVP",
 			glm::ortho(0.0f, (float)gl::WINDOW_WIDTH, 0.0f, (float)gl::WINDOW_HEIGHT, -1.0f, 1.0f)
 		);
 
 		gl::ComputeShader computeShader("res\\mandelbrot_cs.glsl");
-		computeShader.bind();
-		computeShader.setUniform1i("uImage", imageSlot);
-        computeShader.setUniform2f("uImageDim", gl::TEXTURE_DIM.x, gl::TEXTURE_DIM.y);
+		computeShader.Bind();
+		computeShader.SetUniform1i("uImage", imageSlot);
+        computeShader.SetUniform2f("uImageDim", gl::TEXTURE_DIM.x, gl::TEXTURE_DIM.y);
 
 		// Variables controlled by Imgui
 
@@ -159,8 +159,8 @@ int main()
 		bool needDraw = true;
 		bool lazyDraw = true;
 
-		computeShader.validate();
-		graphicShader.validate();
+		computeShader.Validate();
+		graphicShader.Validate();
 		
 		while (gl::Manager::WindowShouldClose() == false)
 		{
@@ -168,12 +168,12 @@ int main()
 
 			if (needDraw || lazyDraw == false)
 			{
-                graphicShader.bind();
-                graphicShader.setUniform1i("uIteration", iteration);
+                graphicShader.Bind();
+                graphicShader.SetUniform1i("uIteration", iteration);
 
-				computeShader.bind();
-				computeShader.setUniform4f("uRangeRect",numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / gl::ASPECT_RATIO) / 2, rangeX, (rangeX / gl::ASPECT_RATIO) );
-				computeShader.setUniform1i("uIteration", iteration);
+				computeShader.Bind();
+				computeShader.SetUniform4f("uRangeRect",numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / gl::ASPECT_RATIO) / 2, rangeX, (rangeX / gl::ASPECT_RATIO) );
+				computeShader.SetUniform1i("uIteration", iteration);
 				computeShader.compute({ gl::TEXTURE_DIM.x / gl::LOCAL_WORKGROUP_SIZE, gl::TEXTURE_DIM.y / gl::LOCAL_WORKGROUP_SIZE, 1});
 
 				needDraw = false;
@@ -183,7 +183,7 @@ int main()
 			// Draw
 
 			glClear(GL_COLOR_BUFFER_BIT);
-			graphicShader.bind();
+			graphicShader.Bind();
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 			// Imgui window

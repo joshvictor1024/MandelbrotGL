@@ -12,39 +12,39 @@ namespace gl
 	{
 	public:
 		virtual ~Shader();
-		void validate();    // Validation should happen after uniforms are set, right before using
+		void Validate();    // Validation should happen after uniforms are set, right before using
 
-		void bind() const
+		void Bind() const
 		{
 			glUseProgram(id);
 		}
 
-		void unbind() const
+		void Unbind() const
 		{
 			glUseProgram(0);
 		}
 
-		void setUniform1i(const char* name, int v0)
+		void SetUniform1i(const char* name, int v0)
 		{
 			glUniform1i(getUniformLocation(name), v0);
 		}
 
-		void setUniform2i(const char* name, int v0, int v1)
+		void SetUniform2i(const char* name, int v0, int v1)
 		{
 			glUniform2i(getUniformLocation(name), v0, v1);
 		}
 
-		void setUniform2f(const char* name, float v0, float v1)
+		void SetUniform2f(const char* name, float v0, float v1)
 		{
 			glUniform2f(getUniformLocation(name), v0, v1);
 		}
 
-		void setUniform4f(const char* name, float v0, float v1, float v2, float v3)
+		void SetUniform4f(const char* name, float v0, float v1, float v2, float v3)
 		{
 			glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
 		}
 
-		void setUniformMat4f(const char* name, const glm::mat4& a_matrix)
+		void SetUniformMat4f(const char* name, const glm::mat4& a_matrix)
 		{
 			glUniformMatrix4fv(getUniformLocation(name), 1/*num of mat*/, GL_FALSE, &a_matrix[0][0]);
 		}

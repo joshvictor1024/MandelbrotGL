@@ -11,6 +11,7 @@ namespace gl
 	class VertexBuffer
 	{
 	public:
+
 		VertexBuffer(GLenum purpose = GL_STATIC_DRAW):
 			purpose(purpose)
 		{
@@ -22,12 +23,12 @@ namespace gl
 			glDeleteBuffers(1, &id);
 		}
 
-		void bind() const
+		void Bind() const
 		{
 			glBindBuffer(GL_ARRAY_BUFFER, id);
 		}
 
-		void unbind() const
+		void Unbind() const
 		{
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
@@ -38,6 +39,7 @@ namespace gl
 		}
 
     private:
+
         GLuint id = 0;
         GLenum purpose;
 	};
@@ -45,6 +47,7 @@ namespace gl
 	class IndexBuffer
 	{
 	public:
+
 		IndexBuffer(GLenum purpose = GL_STATIC_DRAW):
 			purpose(purpose)
 		{
@@ -56,12 +59,12 @@ namespace gl
 			glDeleteBuffers(1, &id);
 		}
 
-		void bind() const
+		void Bind() const
 		{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 		}
 
-		void unbind() const
+		void Unbind() const
 		{
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
@@ -72,6 +75,7 @@ namespace gl
 		}
 
     private:
+
         GLuint id = 0;
         GLenum purpose;
 	};
@@ -101,6 +105,7 @@ namespace gl
 	class VertexBufferLayout
 	{
 	public:
+
 		void push(GLenum type, unsigned int count)
 		{
 			elements.push_back({ type, count, GL_FALSE});
@@ -111,6 +116,7 @@ namespace gl
 		inline unsigned int getStride() const { return stride; }
 
     private:
+
         std::vector<VertexBufferElement> elements;
         unsigned int stride = 0;
 	};
@@ -118,6 +124,7 @@ namespace gl
 	class VertexArray
 	{
 	public:
+
 		VertexArray()
 		{
 			glGenVertexArrays(1, &id);
@@ -128,19 +135,19 @@ namespace gl
 			glDeleteVertexArrays(1, &id);
 		}
 
-		void bind() const
+		void Bind() const
 		{
 			glBindVertexArray(id);
 		}
 
-		void unbind() const
+		void Unbind() const
 		{
 			glBindVertexArray(0);
 		}
 
 		void addBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout)
 		{
-			vb.bind();
+			vb.Bind();
 
 			const auto& elements = layout.getElements();
 			unsigned int offset = 0;
@@ -157,6 +164,7 @@ namespace gl
 		}
 
     private:
+
         GLuint id;
 	};
 };

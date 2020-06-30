@@ -52,7 +52,11 @@ namespace gl
 	private:
 
         Manager();
+        Manager(const Manager& rhs) = delete;
+        Manager(const Manager&& rhs) = delete;
         ~Manager();
+        Manager& operator=(const Manager& rhs) = delete;
+        Manager& operator=(const Manager&& rhs) = delete;
 
         static Manager instance;
 
@@ -74,13 +78,16 @@ namespace gl
 	private:
 
         ImguiManager();
+        ImguiManager(const ImguiManager& rhs) = delete;
+        ImguiManager(const ImguiManager&& rhs) = delete;
         ~ImguiManager();
+        ImguiManager& operator=(const ImguiManager& rhs) = delete;
+        ImguiManager& operator=(const ImguiManager&& rhs) = delete;
 
         static ImguiManager instance;
 
 		bool success = false;
 	};
 };
-
 
 #endif // GL_MANAGER_H

@@ -18,6 +18,11 @@ void main() {
 		z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y);
 	}
 
+    if (it == uIteration)
+    {
+        it = 0;
+    }
+
 	imageStore(uImage, ivec2(gl_GlobalInvocationID.xy), vec4(float(it) / float(uIteration), 0.0, 0.0, 0.0));
 }
 

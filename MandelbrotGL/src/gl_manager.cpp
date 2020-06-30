@@ -5,6 +5,8 @@
 
 namespace gl
 {
+    // Manager ///////////////////////////////////////////////////////
+
     Manager Manager::instance;
 
 	Manager::Manager()
@@ -116,6 +118,8 @@ namespace gl
         default: break;
         }
     }
+
+    // ImguiManager ///////////////////////////////////////////////////////
 
     ImguiManager ImguiManager::instance;
 

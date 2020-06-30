@@ -96,14 +96,34 @@ int main()
 
 		gl::Texture txDrawColor(gl::TextureTarget::TEX1D, gl::PixelFormat::RGB8, gl::TextureWrap::CHOP);
 		txDrawColor.bind(txColorSlot);
-		const uint8_t colorData[] = {
-			  0,   0,   0,
-			120,   0,   0,
-			220,   0,   0,
-			220, 230,   0,
-			180,   0,   0,
-			  0,   0,   0
-		};
+        const uint8_t colorData[] = {
+              0,   0,   0,
+            230, 200,   0,
+            240, 160,   0,
+            250, 100,   0,
+            255,  50,  10,
+            230,   0,  50,
+            150,   0, 130,
+            100,   0, 190,
+             20,   0, 220,
+              0,  50, 230,
+              0, 100, 200,
+              0, 150, 140,
+              0, 160, 120,
+              0, 170, 100,
+              0, 180,  80,
+             10, 190,  50,
+             20, 200,  15,
+             30, 210,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0,
+            255, 220,   0
+        };
 		txDrawColor.updatePixelData((sizeof(colorData) / sizeof(uint8_t)) / 3, colorData);
 
 		// Shaders
@@ -148,6 +168,9 @@ int main()
 
 			if (needDraw || lazyDraw == false)
 			{
+                graphicShader.bind();
+                graphicShader.setUniform1i("uIteration", iteration);
+
 				computeShader.bind();
 				computeShader.setUniform4f("uRangeRect",numberCenter.x - rangeX / 2, numberCenter.y - (rangeX / gl::ASPECT_RATIO) / 2, rangeX, (rangeX / gl::ASPECT_RATIO) );
 				computeShader.setUniform1i("uIteration", iteration);
@@ -244,7 +267,8 @@ int main()
                         if (shiftRightPressed == false)
                         {
                             shiftRightPressed = true;
-                            iteration += 128;
+                            if (iteration < 2048)
+                                iteration += 128;
                         }
 					}
                     else

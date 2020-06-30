@@ -3,7 +3,6 @@
 
 #include "glm.hpp"
 
-
 namespace gl
 {
     constexpr int WINDOW_WIDTH = 1280;
@@ -14,7 +13,6 @@ namespace gl
     static const char* GLSL_VERSION_MACRO = "#version 430 core";
     constexpr int LOCAL_WORKGROUP_SIZE = 32;
 };
-
 
 #endif // !GL_CONSTANTS_H
 
